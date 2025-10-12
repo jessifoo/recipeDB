@@ -1,0 +1,84 @@
+{
+  "// LOCKED SETTINGS - Committed to repo for consistency": "",
+  
+  "// Auto-save and format": "",
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  
+  "// Biome formatter": "",
+  "editor.defaultFormatter": "biomejs.biome",
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  
+  "// Code actions on save": "",
+  "editor.codeActionsOnSave": {
+    "quickfix.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  
+  "// TypeScript settings": "",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.includeInlayParameterNameHints": "all",
+  "typescript.preferences.includeInlayFunctionParameterTypeHints": true,
+  "typescript.preferences.includeInlayPropertyDeclarationTypeHints": true,
+  "typescript.preferences.includeInlayVariableTypeHints": true,
+  "typescript.preferences.includeInlayEnumMemberValueHints": true,
+  
+  "// Editor settings": "",
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  
+  "// File nesting for cleaner sidebar": "",
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
+    "*.tsx": "${capture}.test.tsx, ${capture}.module.css, ${capture}.stories.tsx",
+    "package.json": "pnpm-lock.yaml, .npmrc, .nvmrc",
+    "tsconfig.json": "tsconfig.*.json"
+  },
+  
+  "// Error lens for inline errors": "",
+  "errorLens.enabled": true,
+  "errorLens.fontSize": "0.9em",
+  
+  "// Prisma settings": "",
+  "prisma.showPrismaDataPlatformNotification": false,
+  
+  "// Search exclusions": "",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/out": true,
+    "**/.tsbuildinfo": true,
+    "**/pnpm-lock.yaml": true
+  },
+  
+  "// Files exclusions": "",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true
+  }
+}

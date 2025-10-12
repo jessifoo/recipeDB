@@ -1,8 +1,36 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Validate logging rules
-node scripts/validate-logging.js
+echo "🔍 Running pre-commit validation..."
+echo ""
 
-# Run lint-staged
-npx lint-staged
+# 1. File marker validation
+echo "1/7 Checking file markers..."
+node tools/validators/file-marker-validator.js || exit 1
+
+# 2. Duplicate detection
+echo "2/7 Checking for duplicates..."
+node tools/validators/duplicate-detector.js || exit 1
+
+# 3. Package validation
+echo "3/7 Validating packages..."
+node tools/validators/package-lock-validator.js || exit 1
+
+# 4. Directory structure
+echo "4/7 Validating directory structure..."
+node tools/validators/directory-structure-validator.js || exit 1
+
+# 5. Import validation
+echo "5/7 Validating imports..."
+node tools/validators/import-validator.js || exit 1
+
+# 6. Biome check
+echo "6/7 Running Biome..."
+npx biome check --apply . || exit 1
+
+# 7. TypeScript compilation
+echo "7/7 Type checking..."
+npx tsc --noEmit || exit 1
+
+echo ""
+echo "✅ All pre-commit checks passed!"
