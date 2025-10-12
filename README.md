@@ -1,90 +1,176 @@
-# Recipedb
+# RecipeDB
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A recipe database application built with Next.js, TypeScript, and comprehensive AI development guardrails.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+## Project Philosophy
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This project was created to solve a common problem: **AI-generated code chaos**. After experiencing the pain of maintaining AI-generated Python code with multiple logging implementations, inconsistent patterns, and broken imports, this project implements strict architectural guardrails to prevent those issues.
 
-## Finish your CI setup
+### Key Principles
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/cxM9swo7Ht)
+1. **Centralized Systems**: One canonical implementation for each cross-cutting concern
+2. **Automatic Enforcement**: ESLint, TypeScript, and pre-commit hooks prevent violations
+3. **AI-Friendly Architecture**: Clear constraints that guide AI (and humans) to the right patterns
+4. **Type Safety First**: Strict TypeScript catches errors at compile-time
 
+## Getting Started
 
-## Generate a library
+### Installation
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+```bash
+# Install dependencies (using pnpm)
+pnpm install
+
+# Setup git hooks
+pnpm run prepare
 ```
 
-## Run tasks
+### Development
 
-To build the library use:
+```bash
+# Start development server
+pnpm dev
 
-```sh
-npx nx build pkg1
+# Run linting
+pnpm lint
+
+# Run tests
+pnpm test
+
+# Validate everything (lint + test + custom checks)
+pnpm validate
 ```
 
-To run any task with Nx use:
+## Architecture
 
-```sh
-npx nx <target> <project-name>
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Versioning and releasing
-
-To version and release the library use
+This is an Nx monorepo with strict architectural boundaries:
 
 ```
-npx nx release
+workspace/
+├── packages/           # Centralized, reusable systems
+│   └── logger/        # Centralized logging (ONLY logger allowed)
+├── frontend/          # Next.js application
+└── scripts/           # Validation and enforcement scripts
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+### Centralized Systems (CRITICAL)
 
-[Learn more about Nx release &raquo;](hhttps://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This codebase uses **centralized systems** for cross-cutting concerns. You MUST use these systems - creating alternatives will fail linting and pre-commit checks.
 
-## Keep TypeScript project references up to date
+#### Logging
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+**✅ Correct Usage:**
+```typescript
+import { logger } from '@recipedb/logger';
 
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+logger.info('User logged in', { userId: 123 });
+logger.error('Failed to save', error);
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
-
-```sh
-npx nx sync:check
+**❌ Forbidden (will fail linting):**
+```typescript
+console.log('anything');        // ESLint error
+import winston from 'winston';  // ESLint error
+// Creating logger.ts anywhere  // Pre-commit hook blocked
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+**Enforcement:**
+- ESLint `no-console` rule
+- ESLint `no-restricted-imports` for winston, pino, bunyan, etc.
+- Pre-commit hook scans for logging files
+- TypeScript import path restrictions
 
+See [`AI_CODING_RULES.md`](./AI_CODING_RULES.md) and [`ARCHITECTURE.md`](./ARCHITECTURE.md) for complete details.
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Tech Stack
 
-## Install Nx Console
+- **Frontend**: Next.js 15 + React 19
+- **Language**: TypeScript (strict mode)
+- **Monorepo**: Nx
+- **Testing**: Jest + React Testing Library + Playwright
+- **Linting**: ESLint + Prettier
+- **Package Manager**: pnpm
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Development Workflow
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Before Committing
 
-## Useful links
+```bash
+# Validate everything
+pnpm validate
 
-Learn more:
+# Or individually
+pnpm lint
+pnpm test
+pnpm validate:logging
+```
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Pre-commit Hooks
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Git hooks automatically run on commit:
+1. Logging violation scanner
+2. ESLint with auto-fix
+3. Prettier formatting
+
+**If violations are found, the commit is blocked.**
+
+## Documentation
+
+- [`AI_CODING_RULES.md`](./AI_CODING_RULES.md) - Rules for AI assistants (and humans)
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) - System architecture and patterns
+- [`EXAMPLES.md`](./EXAMPLES.md) - Code examples and usage patterns
+
+## Project Status
+
+🚧 **Early Development** - Infrastructure and guardrails are in place, core features coming soon.
+
+### Implemented
+- ✅ Centralized logging system
+- ✅ ESLint enforcement
+- ✅ Pre-commit hooks
+- ✅ TypeScript strict mode
+- ✅ Testing infrastructure
+
+### Planned
+- 🔜 Database layer (Prisma)
+- 🔜 Recipe CRUD operations
+- 🔜 User authentication
+- 🔜 Search and filtering
+- 🔜 Recipe collections
+
+## Why These Guardrails?
+
+Traditional AI-assisted development often results in:
+- Multiple logging implementations scattered everywhere
+- Broken imports and undefined variables
+- Inconsistent code patterns
+- Runtime errors instead of compile-time safety
+
+This project prevents those issues through:
+- **TypeScript**: Catch errors at compile-time
+- **ESLint**: Enforce patterns automatically
+- **Centralized Systems**: One implementation, enforced everywhere
+- **Pre-commit Hooks**: Automatic validation before code enters the repo
+- **Clear Documentation**: AI and humans know the rules
+
+## Contributing
+
+### Adding Features
+
+1. Check if a centralized system exists for your use case
+2. Follow the patterns in `EXAMPLES.md`
+3. Write tests for new code
+4. Run `pnpm validate` before committing
+5. Ensure all pre-commit hooks pass
+
+### Creating New Centralized Systems
+
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the template and checklist.
+
+## License
+
+MIT
+
+## Author
+
+Jessica Johnson <2334167+jessifoo@users.noreply.github.com>

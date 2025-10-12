@@ -3,12 +3,15 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "npx nx run frontend:serve & npx nx run backend:serve",
+    "dev": "npx nx run frontend:serve",
     "lint": "npx nx run-many --target=lint",
     "test": "npx nx run-many --target=test",
     "build": "npx nx run-many --target=build",
     "format": "npx nx format:write",
-    "clean": "rm -rf node_modules && rm -f package-lock.json && npm install"
+    "clean": "rm -rf node_modules && rm -f package-lock.json && npm install",
+    "prepare": "husky install",
+    "validate": "npm run lint && npm run test && node scripts/validate-logging.js",
+    "validate:logging": "node scripts/validate-logging.js"
   },
   "private": true,
   "devDependencies": {

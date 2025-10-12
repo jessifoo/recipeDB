@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@recipedb/logger": ["../packages/logger/src/index.ts"]
     },
     "types": ["jest", "node"],
     "outDir": "out-tsc/frontend",

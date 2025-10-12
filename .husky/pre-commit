@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Validate logging rules
+node scripts/validate-logging.js
+
+# Run lint-staged
+npx lint-staged

@@ -36,7 +36,38 @@ export default [
       '**/*.cjs',
       '**/*.mjs',
     ],
-    // Override or add rules here
-    rules: {},
+    // ANTI-CHAOS RULES: Prevent AI from creating logging mess
+    rules: {
+      // Ban all console.* methods - MUST use @recipedb/logger
+      'no-console': 'error',
+      
+      // Ban importing ANY external logging libraries
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['winston', 'pino', 'bunyan', 'log4js', 'loglevel', 'consola'],
+              message: '❌ Use @recipedb/logger instead. Do not import external logging libraries.',
+            },
+          ],
+        },
+      ],
+      
+      // Prevent creating files with logging-related names in wrong places
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
   },
 ];
