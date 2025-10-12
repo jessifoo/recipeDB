@@ -1,0 +1,42 @@
+// Prisma schema - SINGLE SOURCE OF TRUTH for database
+// Add your models here
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example model - DELETE THIS and add your own
+model Example {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("examples")
+}
+
+// ADD YOUR MODELS HERE
+// 
+// Example:
+// model User {
+//   id        String   @id @default(cuid())
+//   email     String   @unique
+//   name      String?
+//   role      UserRole @default(USER)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   
+//   @@map("users")
+// }
+//
+// enum UserRole {
+//   USER
+//   ADMIN
+// }

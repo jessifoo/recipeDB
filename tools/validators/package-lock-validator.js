@@ -72,11 +72,16 @@ const APPROVED_DEPENDENCIES = {
   // Auth
   'next-auth': true,
   '@auth/prisma-adapter': true,
+  '@auth/core': true,
 
   // State
   '@reduxjs/toolkit': true,
   'react-redux': true,
   zustand: true,
+
+  // Utilities
+  superjson: true,
+  '@t3-oss/env-nextjs': true,
 
   // UI
   tailwindcss: true,
@@ -101,13 +106,21 @@ const APPROVED_DEPENDENCIES = {
   '@nx/react': true,
   '@nx/jest': true,
   '@nx/playwright': true,
+  '@nx/js': true,
+  '@nx/devkit': true,
   nx: true,
 
-  // Formatting
-  biomejs: true,
+  // Formatting/Linting
   '@biomejs/biome': true,
+  
+  // Git hooks
+  husky: true,
+  
+  // Utilities for validators
+  glob: true,
+  minimatch: true,
 
-  // Our packages
+  // Our internal packages (folders only - NO package.json!)
   '@app/logger': true,
   '@app/database': true,
   '@app/validation': true,

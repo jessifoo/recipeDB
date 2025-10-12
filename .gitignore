@@ -46,3 +46,21 @@ Thumbs.db
 out
 
 test-output
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Prisma
+**/node_modules/.prisma/
+
+# Package managers
+package-lock.json
+yarn.lock

@@ -1,99 +1,186 @@
-# AI CODING RULES - READ THIS FIRST
+# 🚨 AI CODING RULES - READ FIRST
 
-**These rules are AUTOMATICALLY ENFORCED by ESLint, TypeScript, and pre-commit hooks.**
+## CRITICAL: Package Management
 
-## 🚨 CRITICAL: CENTRALIZED SYSTEMS (DO NOT VIOLATE)
-
-### Logging - SINGLE SOURCE OF TRUTH
-
-**✅ ALWAYS DO THIS:**
-```typescript
-import { logger } from '@recipedb/logger';
-
-logger.info('User logged in', { userId: 123 });
-logger.error('Failed to save', error);
-logger.warn('Cache miss', { key: 'user:123' });
-logger.debug('Query executed', { sql: 'SELECT ...' });
-```
-
-**❌ NEVER DO THIS:**
-```typescript
-// ❌ FORBIDDEN - Will fail ESLint
-console.log('anything');
-console.error('anything');
-
-// ❌ FORBIDDEN - Will fail ESLint
-import winston from 'winston';
-import pino from 'pino';
-
-// ❌ FORBIDDEN - Will fail pre-commit hook
-// Creating files named: logger.ts, log.ts, logging.ts, etc.
-```
-
-### Why This Matters
-
-In this codebase:
-- **ONE logger location**: `packages/logger/src/index.ts`
-- **ONE way to log**: `import { logger } from '@recipedb/logger'`
-- **NO exceptions**: Even quick debugging must use the logger
-
-### Enforcement Layers
-
-1. **ESLint**: Blocks `console.*` and external logger imports
-2. **Pre-commit hook**: Scans for logging file names and patterns
-3. **TypeScript**: Only `@recipedb/logger` is in import paths
-4. **Code review**: Human verification
-
-### If You Need to Add Logging Functionality
-
-1. DO NOT create a new file
-2. DO edit `packages/logger/src/index.ts`
-3. Add your feature to the centralized Logger class
-4. Export it from the same file
-5. Update `packages/logger/README.md`
-
-## 📋 Other Centralized Patterns (To Be Established)
-
-Future centralized systems will follow the same pattern:
-- `@recipedb/database` - Single database client
-- `@recipedb/validation` - Single validation system
-- `@recipedb/auth` - Single auth system
-
-**The pattern is:**
-1. ONE package in `packages/[name]/`
-2. ONE export from `src/index.ts`
-3. ESLint rules preventing alternatives
-4. Pre-commit hook validation
-5. Documentation in package README
-
-## 🔧 Quick Reference
-
-**Before writing ANY code, ask:**
-- "Does a centralized system exist for this?"
-- "Am I about to create a duplicate file/system?"
-- "Should I add to existing infrastructure instead?"
-
-**If unsure:**
-1. Check `packages/` directory
-2. Check `tsconfig.base.json` paths
-3. Search for existing implementations
-4. Ask before creating new infrastructure
-
-## 🚀 Development Workflow
+### ⛔ ABSOLUTELY FORBIDDEN
 
 ```bash
-# Before committing
-npm run validate
-
-# Check logging specifically
-npm run validate:logging
-
-# The commit will auto-run these checks
-git commit -m "message"
+# ❌ DO NOT create package.json in packages/
+# ❌ DO NOT create package.json anywhere except root
+# ❌ DO NOT add dependencies except in root package.json
 ```
 
-## ⚡ Key Principle
+**WHY:** There is ONE package.json at the root. This enforces centralized dependency management. If you create package.json files in packages/, you can bypass our enforcement.
 
-**"Centralize once, enforce everywhere"**
+### ✅ CORRECT APPROACH
 
-This prevents the chaos of multiple implementations, duplicate code, and conflicting patterns.
+```bash
+# ✅ All dependencies in root package.json ONLY
+# ✅ Packages are just folders with TypeScript files
+# ✅ Use TypeScript path mapping for imports
+```
+
+## Package Structure
+
+```
+/workspace/
+  package.json          ← ONLY package.json (all dependencies here)
+  
+  packages/
+    logger/
+      src/
+        index.ts        ← Just TypeScript files
+        logger.ts
+    database/
+      src/
+        index.ts
+    types/
+      src/
+        index.ts
+```
+
+## Adding Dependencies
+
+### ⛔ BANNED - Will Fail Validation
+
+```bash
+cd packages/logger
+npm install winston     # ❌ NO! No package.json here!
+
+# Or editing root to add banned package
+{
+  "dependencies": {
+    "winston": "^3.0.0"  # ❌ BANNED - fails pre-commit
+  }
+}
+```
+
+### ✅ REQUIRED - Only Way
+
+```bash
+# Edit root package.json
+# Add to approved dependencies list
+# Must pass package validator
+
+# OR request approval:
+# 1. Explain why package is needed
+# 2. Add to APPROVED_DEPENDENCIES in validator
+# 3. Document in docs/dependencies.md
+```
+
+## Centralized Systems
+
+### Logging
+```typescript
+// ✅ CORRECT
+import { logger } from '@app/logger';
+logger.info('message');
+
+// ❌ WRONG - will fail
+console.log('message');
+import winston from 'winston';
+```
+
+### Database
+```typescript
+// ✅ CORRECT
+import { db } from '@app/database';
+const users = await db.user.findMany();
+
+// ❌ WRONG - will fail
+import { PrismaClient } from '@prisma/client';
+const db = new PrismaClient();
+```
+
+### Validation
+```typescript
+// ✅ CORRECT
+import { userSchema } from '@app/validation';
+const validated = userSchema.create.parse(data);
+
+// ❌ WRONG - will fail
+import { z } from 'zod';
+const schema = z.object({ ... });
+```
+
+### Types
+```typescript
+// ✅ CORRECT
+import { UserId, Validated } from '@app/types';
+function getUser(id: UserId) { ... }
+
+// ❌ WRONG
+function getUser(id: string) { ... }
+```
+
+## File Creation
+
+### ⛔ DO NOT Create Files Manually
+
+All files MUST be created via generators:
+
+```bash
+# ❌ WRONG
+touch packages/domain/user/src/user.service.ts
+code packages/domain/user/src/user.service.ts
+
+# ✅ CORRECT
+npx nx g @app/generators:module user
+```
+
+### Required File Marker
+
+Every file must have:
+
+```typescript
+/**
+ * @generated by @app/generators:module
+ * @generatedAt 2024-01-15T10:00:00Z
+ */
+
+import { createFileMetadata } from '../../../tools/file-marker/marker';
+
+export const __metadata = createFileMetadata('@app/generators:module');
+
+// Your code here...
+```
+
+## Pre-Commit Validation
+
+Every commit runs 7 validators:
+
+1. **File Markers**: All files have generator metadata
+2. **Duplicates**: No duplicate exports
+3. **Packages**: No banned dependencies
+4. **Directory**: Files in correct locations
+5. **Imports**: No banned imports
+6. **Biome**: Lint + format
+7. **TypeScript**: Type check
+
+**If ANY fail, commit is BLOCKED.**
+
+## Enforcement Summary
+
+| What | Enforced By | Severity |
+|------|-------------|----------|
+| One package.json | File structure | CRITICAL |
+| Banned packages | Pre-commit validator | CRITICAL |
+| File markers | Pre-commit validator | ERROR |
+| Centralized logger | TypeScript paths + ESLint | ERROR |
+| Centralized db | TypeScript paths + ESLint | ERROR |
+| Branded types | TypeScript compiler | ERROR |
+| No console.log | Biome | ERROR |
+
+## Questions?
+
+- **Can I add a dependency?** Check if approved, or request approval
+- **Can I create a file?** Use generator
+- **Can I import Prisma directly?** No - use @app/database
+- **Can I use console.log?** No - use @app/logger
+- **Can I skip validation?** No - commit will be blocked
+
+## The Goal
+
+**Make it IMPOSSIBLE to write bad code, not just discouraged.**
+
+Every rule is enforced automatically. AI (and humans) cannot bypass them.
