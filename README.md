@@ -1,134 +1,214 @@
-# AI-Proof TypeScript Template
+# Simple Full-Stack Template
 
-**Reusable foundation for any project - Maximum enforcement built-in.**
+**Working end-to-end. Ready to use. Easy to maintain.**
 
-> 🎯 This is a **TEMPLATE** - Clone it for every new project you start!
+## 🚀 Quick Start
 
-## 🚀 Using This Template
-
-### For a New Project:
 ```bash
-# Quick way:
-./create-project.sh my-new-project
-
-# Or use as GitHub template:
-# Click "Use this template" on GitHub
-```
-
-### For Template Development:
-```bash
+# 1. Install
 pnpm install
-pnpm run prepare
-pnpm run validate
+
+# 2. Setup env
+cp .env.example .env
+# Edit .env with your database
+
+# 3. Setup database
+pnpm db:push
+
+# 4. Test it works
+pnpm test
+
+# 5. Start dev
+pnpm dev
 ```
 
-See `TEMPLATE_USAGE.md` for detailed instructions.
+## 📁 Structure (SIMPLE)
 
-## 🔒 What's Enforced
+```
+src/
+  lib/
+    db.ts           ← Database (ONE Prisma client)
+    logger.ts       ← Logger (simple wrapper)
+    env.ts          ← Environment vars (type-safe)
+    
+  server/api/
+    trpc.ts         ← tRPC setup
+    root.ts         ← Router registry
+    routers/
+      example.ts    ← WORKING example (copy this!)
+      
+  app/              ← Next.js App Router
+```
 
-**ONE package.json rule:**
-- ✅ `/workspace/package.json` - All dependencies here
-- ❌ `packages/*/package.json` - Blocked by validator
+## ✅ What's Working
 
-**Blocked imports:**
+**Full CRUD example in `src/server/api/routers/example.ts`:**
+- ✅ Create, Read, Update, Delete
+- ✅ Error handling (tRPC errors)
+- ✅ Logging (logger.info, logger.error)
+- ✅ Database (Prisma)
+- ✅ Validation (Zod)
+- ✅ Tests (working end-to-end)
+
+**Test it:**
+```bash
+# Ping test (tests DB, logger, everything)
+curl http://localhost:3000/api/trpc/example.ping
+
+# Or run tests
+pnpm test
+```
+
+## 🎯 How to Add New Routes
+
+**Copy the pattern in `example.ts`:**
+
+1. Create router file:
 ```typescript
-import { PrismaClient } from '@prisma/client';  // ❌ Path doesn't exist
-import winston from 'winston';                   // ❌ Path doesn't exist
+// src/server/api/routers/user.ts
+import { z } from 'zod';
+import { router, publicProcedure, TRPCError } from '../trpc';
 
-import { db } from '@app/database';              // ✅ Only way
-import { logger } from '@app/logger';            // ✅ Only way
+export const userRouter = router({
+  create: publicProcedure
+    .input(z.object({ name: z.string(), email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      ctx.logger.info('Creating user', { email: input.email });
+      
+      try {
+        return await ctx.db.user.create({ data: input });
+      } catch (error) {
+        ctx.logger.error('Failed to create user', { error });
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      }
+    }),
+  // ... getById, list, update, delete (copy from example.ts)
+});
 ```
 
-**12 Pre-commit validators:**
-1. No package.json in packages/ (CRITICAL)
-2. Code quality (no TODOs, .only, empty catch)
-3. Type coverage (no explicit 'any')
-4. File markers required
-5. No duplicates
-6. Package validation
-7. Directory structure
-8. Import validation
-9. Function complexity (warning)
-10. Test coverage (warning)
-11. Biome check
-12. TypeScript + tests
+2. Add to root router:
+```typescript
+// src/server/api/root.ts
+import { userRouter } from './routers/user';
 
-## 📦 Core Packages
+export const appRouter = router({
+  example: exampleRouter,
+  user: userRouter, // ← Add here
+});
+```
+
+3. Update Prisma schema:
+```prisma
+// prisma/schema.prisma
+model User {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+}
+```
+
+4. Push schema:
+```bash
+pnpm db:push
+```
+
+**Done!** Your route follows the EXACT same pattern.
+
+## 🛡️ What's Enforced
+
+Validators prevent AI from creating mess:
+
+❌ Can't create new `PrismaClient()` → Must use `@/lib/db`
+❌ Can't import winston/pino → Must use `@/lib/logger`
+❌ Can't use `console.log` → Must use `logger.*`
+❌ Can't create custom error classes → Must use `TRPCError`
+
+**Result:** Consistent code. Always.
+
+## 📝 Adding Features
+
+### New Error Type
+Just use tRPC error codes:
+```typescript
+throw new TRPCError({ 
+  code: 'BAD_REQUEST', 
+  message: 'Your custom message' 
+});
+```
+
+### New Log Location
+Just use the logger:
+```typescript
+import { logger } from '@/lib/logger';
+
+logger.info('Something happened', { data });
+logger.error('Something failed', { error });
+```
+
+### New Env Var
+Add to `src/lib/env.ts`:
+```typescript
+const envSchema = z.object({
+  // ... existing
+  MY_NEW_VAR: z.string(),
+});
+```
+
+Then use: `env.MY_NEW_VAR`
+
+## 🧪 Tests
+
+Every route has tests. Copy the pattern:
 
 ```typescript
-import { logger } from '@app/logger';              // Logging
-import { db } from '@app/database';                // Database
-import { validate, common } from '@app/validation'; // Validation
-import { ValidationError } from '@app/errors';     // Errors
-import { env, PAGINATION } from '@app/config';     // Config
-import { UserId, Validated } from '@app/types';    // Types
+// src/server/api/routers/user.test.ts
+import { describe, it, expect } from 'vitest';
+import { appRouter } from '../root';
+import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
+
+const caller = appRouter.createCaller({ db, logger, headers: new Headers() });
+
+describe('User Router', () => {
+  it('should create user', async () => {
+    const user = await caller.user.create({
+      name: 'Test',
+      email: 'test@example.com',
+    });
+    
+    expect(user.id).toBeDefined();
+  });
+});
 ```
 
-All packages = **folders only** (no package.json!)
+## 🎯 Philosophy
 
-## 🛠️ Commands
+**SIMPLE:**
+- Use framework features (tRPC errors, Zod validation)
+- Don't reinvent the wheel
+- ONE lib/ folder with basics
+- Copy `example.ts` for new routes
+
+**ENFORCED:**
+- Validators prevent deviating
+- AI must follow patterns
+- Consistent codebase
+
+**WORKING:**
+- Full end-to-end example
+- Tests included
+- Ready to extend
+
+## 🔧 Commands
 
 ```bash
-pnpm dev              # Start dev
-pnpm build            # Build
+pnpm dev              # Start dev server
+pnpm build            # Build for production
+pnpm test             # Run tests
+pnpm db:push          # Push schema changes
+pnpm db:studio        # Open Prisma Studio
+pnpm lint             # Lint code
 pnpm typecheck        # Type check
-pnpm lint             # Lint
-pnpm test             # Test
-pnpm validate         # All checks
-pnpm db:migrate       # DB migration
 ```
 
-## 📚 Docs
-
-**For Template Users:**
-- `TEMPLATE_USAGE.md` - How to create projects ← **START HERE**
-- `PROJECTS.md` - Example project ideas
-- `GENERATORS.md` - How to generate features ← **POWERFUL**
-- `.github/TEMPLATE_CHECKLIST.md` - Setup checklist
-
-**For Development:**
-- `COMPLETE_SOLUTION.md` - Full system overview
-- `AI_CODING_RULES.md` - Rules for AI
-- `QUICK_REFERENCE.md` - Quick lookup
-- `QUALITY_ENFORCEMENT.md` - Quality rules
-
-## 🎯 State Management Strategy
-
-```typescript
-// Server state (DB, API) → tRPC + TanStack Query
-// URL state (filters, pagination) → nuqs (type-safe searchParams)
-// Form state (validation) → React Hook Form + Zod
-// Client state (UI, modals) → Zustand
-```
-
-## 🎯 Generator System
-
-**Generate complete features with one command:**
-```bash
-pnpm generate:feature recipe \
-  --fields "title:string,ingredients:string" \
-  --ops create,get,list,update,delete
-```
-
-**Creates:**
-- Service + Repository (with error handling)
-- tRPC Router (with validation)
-- Validation schemas
-- Unit tests (mocked)
-- Integration tests (real DB)
-
-See `GENERATORS.md` for details.
-
-## 🎯 Next: Phase 3
-
-- [x] Generators (DONE!)
-- [x] Error handling (DONE!)
-- [ ] Auth (NextAuth)
-- [ ] Zustand store setup
-- [ ] tRPC boilerplate
-- [ ] React Hook Form patterns
-- [ ] UI components
-
-## License
-
-MIT - Jessica Johnson
+**That's it. Simple. Working. Ready to use.** ✅

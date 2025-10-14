@@ -45,16 +45,12 @@
       "@/server/*": ["./src/server/*"],
       "@/app/*": ["./src/app/*"],
       
-      // BLOCKED PATHS - AI cannot import these
-      "@prisma/client": ["BLOCKED - use @app/database instead"],
-      "winston": ["BLOCKED - use @app/logger instead"],
-      "pino": ["BLOCKED - use @app/logger instead"],
-      "bunyan": ["BLOCKED - use @app/logger instead"],
-      "log4js": ["BLOCKED - use @app/logger instead"],
+      // BLOCKED PATHS - Force use of centralized libs
+      "winston": ["BLOCKED - use @/lib/logger instead"],
+      "pino": ["BLOCKED - use @/lib/logger instead"],
+      "bunyan": ["BLOCKED - use @/lib/logger instead"],
       "axios": ["BLOCKED - use tRPC instead"],
-      "got": ["BLOCKED - use tRPC instead"],
-      "node-fetch": ["BLOCKED - use native fetch"],
-      "zod": ["BLOCKED - use @app/validation schemas instead"]
+      "got": ["BLOCKED - use tRPC instead"]
     }
   }
 }
