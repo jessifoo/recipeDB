@@ -1,236 +1,289 @@
-# 🏛️ Hexagonal Architecture (Ports & Adapters)
+# 🏛️ Template Architecture
 
-## Framework Independence
+## Core Concept: Fixed Frontend, Swappable Backend
 
-**Change ANY framework, business logic stays untouched.**
-
-```
-src/
-  core/               ← PURE business logic (no framework deps)
-    domain/           ← Entities, value objects, business rules
-    ports/            ← Interfaces (IRepository, ILogger, ICache, etc.)
-    services/         ← Business logic (uses ONLY ports)
-    
-  infrastructure/     ← Framework implementations (swappable)
-    db/
-      prisma.adapter.ts     ← Postgres + Prisma
-      mongo.adapter.ts      ← MongoDB (future)
-      dynamodb.adapter.ts   ← DynamoDB (future)
-    logger/
-      console.adapter.ts    ← Console
-      winston.adapter.ts    ← Winston (future)
-      datadog.adapter.ts    ← Datadog (future)
-    cache/
-      in-memory.adapter.ts  ← Simple cache
-      redis.adapter.ts      ← Redis (future)
-    api/
-      trpc.adapter.ts       ← tRPC transport
-      rest.adapter.ts       ← REST API (future)
-      graphql.adapter.ts    ← GraphQL (future)
-```
-
-## How to Swap Frameworks
-
-### Swap Database (Prisma → MongoDB)
-
-**Before:**
-```typescript
-const repository = new PrismaExampleRepository(db, logger);
-```
-
-**After:**
-```typescript
-const repository = new MongoExampleRepository(mongoClient, logger);
-```
-
-**Business logic unchanged.** Same `IRepository` interface.
-
-### Swap Logger (Console → Winston)
-
-**Before:**
-```typescript
-const logger = new ConsoleLogger();
-```
-
-**After:**
-```typescript
-const logger = new WinstonLogger(winstonConfig);
-```
-
-**Business logic unchanged.** Same `ILogger` interface.
-
-### Swap API (tRPC → REST)
-
-**Before:**
-```typescript
-// trpc.adapter.ts
-export const exampleRouter = router({ ... });
-```
-
-**After:**
-```typescript
-// rest.adapter.ts
-export const exampleRouter = express.Router();
-exampleRouter.get('/:id', async (req, res) => {
-  const service = createExampleService();
-  const result = await service.getById(req.params.id);
-  res.json(result);
-});
-```
-
-**Business logic unchanged.** Same `ExampleService`.
-
-## Dependency Flow
+### What NEVER Changes (Copy for Every Project)
 
 ```
-Infrastructure → Core (adapters implement ports)
+src/app/                    ← FIXED FRONTEND SCAFFOLD
+  stores/
+    use-app.store.ts        ← Global UI state (sidebar, theme, etc.)
+    use-pagination.store.ts ← Reusable pagination
+  hooks/
+    use-url-state.ts        ← URL state management (nuqs)
+  components/
+    pagination.tsx          ← Pagination UI
+    search-filter.tsx       ← Search with debounce
+  
+  → React, Next.js, Zustand, React Hook Form, nuqs
+  → Too integrated to swap - optimized, ready to go
 ```
 
-```typescript
-// ✅ GOOD - Infrastructure depends on Core
-import type { IRepository } from '@/core/ports/repository.port';
+### What Changes Per App (Swappable Domain Logic)
 
-class PrismaExampleRepository implements IRepository { ... }
 ```
+src/core/                   ← SWAPPABLE BUSINESS LOGIC
+  domain/
+    recipe.entity.ts        ← OR product.entity.ts OR user.entity.ts
+    recipe.rules.ts         ← Business rules per app
+  services/
+    recipe.service.ts       ← Business logic per app
+  ports/
+    repository.port.ts      ← Stays same (interface)
+    logger.port.ts          ← Stays same (interface)
 
-```typescript
-// ❌ BAD - Core depends on Infrastructure
-import { PrismaClient } from '@prisma/client'; // BLOCKED!
-
-class ExampleService {
-  // Don't do this - couples to Prisma
-}
+src/infrastructure/         ← SWAPPABLE DATABASE/TECH
+  db/
+    prisma.adapter.ts       ← OR mongo.adapter.ts OR supabase.adapter.ts
 ```
-
-## Validators Enforce This
-
-Pre-commit hooks **block** framework imports in `core/`:
-
-```bash
-❌ DO NOT import Prisma in core/ 
-   → Implement IRepository adapter in infrastructure/
-
-❌ DO NOT import tRPC in core/
-   → Use adapters in infrastructure/api/
-
-✅ USE port interfaces only
-```
-
-## Testing Benefits
-
-### Pure Unit Tests (No DB, No Framework)
-
-```typescript
-// Mock the port interface
-const mockRepository: IRepository = {
-  findById: vi.fn(),
-  create: vi.fn(),
-};
-
-const service = new ExampleService({ repository: mockRepository });
-
-// Test business logic in isolation
-```
-
-### Integration Tests (Swap to In-Memory)
-
-```typescript
-// No Prisma/Postgres needed for tests
-const repository = new InMemoryExampleRepository(logger);
-const service = new ExampleService({ repository });
-
-// Full integration testing without infrastructure
-```
-
-### E2E Tests (Real Adapters)
-
-```typescript
-// Use real Prisma adapter
-const repository = new PrismaExampleRepository(db, logger);
-const service = new ExampleService({ repository });
-
-// Test with real database
-```
-
-## Adding New Features
-
-1. **Define Domain Model** (`core/domain/`)
-   ```typescript
-   export interface Recipe { ... }
-   export class RecipeRules { ... }
-   ```
-
-2. **Create Service** (`core/services/`)
-   ```typescript
-   export class RecipeService {
-     constructor(private deps: { repository: IRepository<Recipe> }) {}
-   }
-   ```
-
-3. **Implement Adapter** (`infrastructure/db/`)
-   ```typescript
-   export class PrismaRecipeRepository implements IRepository<Recipe> { ... }
-   ```
-
-4. **Wire in Router** (`infrastructure/api/`)
-   ```typescript
-   export const recipeRouter = router({
-     getById: procedure.query(async ({ input }) => {
-       const service = createRecipeService();
-       return service.getById(input);
-     }),
-   });
-   ```
-
-## Core Principles
-
-### ✅ DO
-- Define interfaces (ports) in `core/ports/`
-- Implement business logic using ONLY ports
-- Create adapters in `infrastructure/`
-- Inject dependencies via constructor
-- Test business logic with mocks
-
-### ❌ DON'T
-- Import framework code in `core/`
-- Create new adapters in `core/`
-- Use singletons (use DI instead)
-- Couple business logic to infrastructure
-
-## Migration Guide
-
-### To swap from Prisma to MongoDB:
-
-1. Create `infrastructure/db/mongo.adapter.ts`
-2. Implement `IRepository<Example, ...>`
-3. Update composition root:
-   ```typescript
-   const repository = new MongoExampleRepository(mongoClient, logger);
-   ```
-4. **Done.** No other changes needed.
-
-### To swap from tRPC to GraphQL:
-
-1. Create `infrastructure/api/graphql.adapter.ts`
-2. Use same `ExampleService`
-3. Map GraphQL resolvers to service methods
-4. **Done.** Business logic untouched.
-
-## File Count
-
-**Core (framework-free):**
-- `core/domain/example.entity.ts`
-- `core/ports/*.port.ts` (5 files)
-- `core/services/example.service.ts`
-
-**Infrastructure (swappable):**
-- `infrastructure/db/*.adapter.ts`
-- `infrastructure/logger/*.adapter.ts`
-- `infrastructure/cache/*.adapter.ts`
-- `infrastructure/api/*.adapter.ts`
-
-**Total:** ~15 files for complete feature with swappable everything.
 
 ---
 
-**This is what Google-level architecture looks like.**
+## Example: Building RecipeDB vs E-Commerce
+
+### RecipeDB
+```typescript
+// core/domain/recipe.entity.ts
+export interface Recipe {
+  id: string;
+  title: string;
+  ingredients: string[];
+  instructions: string[];
+}
+
+// core/services/recipe.service.ts
+export class RecipeService {
+  async search(query: string): Promise<Recipe[]> {
+    // Recipe-specific logic
+  }
+}
+```
+
+### E-Commerce (Same Template, Different Domain)
+```typescript
+// core/domain/product.entity.ts
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+}
+
+// core/services/product.service.ts
+export class ProductService {
+  async purchase(id: string): Promise<Order> {
+    // E-commerce-specific logic
+  }
+}
+```
+
+**Frontend stays IDENTICAL:**
+- Pagination component
+- Search component
+- URL state management
+- Global state (Zustand)
+- Forms (React Hook Form)
+
+---
+
+## Frontend Scaffold (REUSABLE)
+
+### Global State Management
+
+**App Store** - Every app needs this:
+```typescript
+const { theme, sidebarOpen, toggleSidebar } = useAppStore();
+```
+
+**Pagination Store** - Create per entity:
+```typescript
+const useRecipePagination = createPaginationStore('recipes');
+const { page, limit, nextPage, prevPage } = useRecipePagination();
+```
+
+### URL State (nuqs)
+
+**Built-in hooks for common patterns:**
+```typescript
+// Pagination
+const [{ page, limit }, setParams] = usePaginationUrl();
+
+// Search
+const [search, setSearch] = useSearchUrl();
+
+// Sorting
+const [{ sortBy, sortOrder }] = useSortUrl(['createdAt', 'name']);
+
+// Tabs
+const [tab, setTab] = useTabUrl(['all', 'active', 'archived'], 'all');
+
+// Modals
+const dialog = useDialogUrl('edit');
+dialog.open('recipe-123');
+dialog.close();
+```
+
+### Forms (React Hook Form + Zod)
+
+**Pattern for every form:**
+```typescript
+const form = useForm({
+  resolver: zodResolver(createRecipeSchema),
+  defaultValues: { title: '', ingredients: [] },
+});
+
+const onSubmit = form.handleSubmit(async (data) => {
+  await createMutation.mutateAsync(data);
+});
+```
+
+### Components
+
+**Pagination** - Drop in anywhere:
+```tsx
+<Pagination 
+  total={data.total} 
+  onPageChange={(page) => refetch({ page })} 
+/>
+```
+
+**Search** - Debounced, URL-synced:
+```tsx
+<SearchFilter 
+  placeholder="Search recipes..." 
+  onSearch={(q) => refetch({ search: q })} 
+/>
+```
+
+---
+
+## Backend Flexibility (SWAPPABLE)
+
+### Domain Layer
+
+**Changes per app:**
+- Entities (Recipe vs Product vs User)
+- Business rules
+- Validation logic
+- Services
+
+**Same pattern:**
+- Always use port interfaces
+- Always dependency injection
+- Always testable
+
+### Infrastructure Layer
+
+**Swap database:**
+```typescript
+// Postgres + Prisma
+const repo = new PrismaRecipeRepository(db, logger);
+
+// MongoDB
+const repo = new MongoRecipeRepository(mongoClient, logger);
+
+// Supabase
+const repo = new SupabaseRecipeRepository(supabase, logger);
+```
+
+**Swap API transport (less common, but possible):**
+```typescript
+// tRPC (default)
+export const recipeRouter = router({ ... });
+
+// REST (if needed)
+export const recipeRouter = express.Router();
+recipeRouter.get('/', ...);
+```
+
+---
+
+## File Organization
+
+### FIXED (Copy Every Time)
+```
+src/app/
+  layout.tsx              ← Root layout
+  page.tsx                ← Home page
+  stores/                 ← Global state (3 files)
+  hooks/                  ← URL state hooks (1 file)
+  components/             ← Reusable UI (5-10 files)
+  providers.tsx           ← React Query, etc.
+```
+
+### CHANGES PER APP
+```
+src/core/
+  domain/
+    [entity].entity.ts    ← Your domain model
+  services/
+    [entity].service.ts   ← Your business logic
+  ports/                  ← Same interfaces, reused
+
+src/infrastructure/
+  db/
+    [adapter].adapter.ts  ← Database implementation
+  api/
+    trpc.adapter.ts       ← API routes (uses your service)
+```
+
+### Total Files
+- **Frontend (fixed):** ~15 files
+- **Backend (per app):** ~10 files per feature
+- **Total:** ~25 files for complete CRUD app
+
+---
+
+## What This Solves
+
+### ✅ Every Project Gets
+1. **Pagination** - Working, URL-synced, tested
+2. **Search** - Debounced, URL-synced, accessible
+3. **Global state** - Theme, sidebar, preferences
+4. **URL state** - Filters, tabs, modals in URL
+5. **Forms** - Type-safe, validated, error handling
+6. **Auth UI** - Login, signup, forgot password
+
+### 🔄 Easy to Change
+1. **Domain logic** - Recipe → Product → User
+2. **Database** - Postgres → MongoDB → Supabase
+3. **Schema** - Just update Prisma schema
+4. **Business rules** - All in service layer
+
+### 🚫 Hard to Mess Up
+- Frontend patterns = copy/paste
+- Validators block bad imports
+- Types prevent runtime errors
+- Tests catch regressions
+
+---
+
+## Usage Pattern
+
+### Starting a New Project
+
+1. **Copy template** (frontend scaffold already complete)
+2. **Define domain** (`core/domain/recipe.entity.ts`)
+3. **Implement service** (`core/services/recipe.service.ts`)
+4. **Choose database** (`infrastructure/db/prisma-recipe.adapter.ts`)
+5. **Wire API** (`infrastructure/api/trpc.adapter.ts`)
+6. **Use frontend** (already done - just call tRPC)
+
+### Migrating to New DB
+
+1. Create new adapter (`mongo-recipe.adapter.ts`)
+2. Implement `IRepository` interface
+3. Update composition root
+4. **Done** - no other changes
+
+### Adding a Feature
+
+1. Update domain model
+2. Add service methods
+3. Update repository
+4. Add tRPC endpoints
+5. **Frontend just works** (pagination, search, etc.)
+
+---
+
+**This is the template: React scaffold (fixed) + Domain logic (swappable)**

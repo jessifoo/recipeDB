@@ -1,214 +1,271 @@
-# Simple Full-Stack Template
+# 🚀 Enterprise Template - Fixed Frontend, Swappable Backend
 
-**Working end-to-end. Ready to use. Easy to maintain.**
+**React scaffold (complete) + Domain logic (per app)**
+
+## 🎯 What This Is
+
+A **production-ready template** you copy for EVERY project:
+
+- ✅ **Frontend complete** - Pagination, search, state management, forms, auth UI
+- ✅ **Backend swappable** - Change domain logic, database, business rules per app
+- ✅ **AI-proof** - Validators prevent duplicate implementations
+- ✅ **Type-safe** - 30+ TypeScript strict flags, no escape hatches
+
+## 🏗️ Architecture
+
+### FIXED (Never Changes)
+```
+Frontend Scaffold
+├── Pagination (URL-synced)
+├── Search (debounced)
+├── Global state (Zustand)
+├── URL state (nuqs)
+├── Forms (React Hook Form + Zod)
+└── Auth UI (ready for NextAuth)
+```
+
+### SWAPPABLE (Changes Per App)
+```
+Backend Domain
+├── Entities (Recipe vs Product vs User)
+├── Business logic
+├── Database adapter (Prisma vs Mongo vs Supabase)
+└── API routes (uses domain services)
+```
+
+## 📦 What's Included
+
+### Frontend (Complete, Reusable)
+
+**State Management:**
+```typescript
+// Global UI state
+const { theme, sidebarOpen } = useAppStore();
+
+// Pagination
+const { page, limit, nextPage } = usePagination();
+
+// URL state
+const [search] = useSearchUrl();
+const [{ sortBy, sortOrder }] = useSortUrl(['name', 'date']);
+const dialog = useDialogUrl('edit');
+```
+
+**Components:**
+```tsx
+<Pagination total={100} />
+<SearchFilter placeholder="Search..." />
+```
+
+**Forms:**
+```typescript
+const form = useForm({
+  resolver: zodResolver(schema),
+});
+```
+
+### Backend (Swappable)
+
+**Domain Layer:**
+```typescript
+// core/domain/recipe.entity.ts
+export interface Recipe {
+  id: string;
+  title: string;
+  // ... your domain model
+}
+```
+
+**Service Layer:**
+```typescript
+// core/services/recipe.service.ts
+export class RecipeService {
+  async search(query: string): Promise<Recipe[]> {
+    // Your business logic
+  }
+}
+```
+
+**Adapter Layer:**
+```typescript
+// Swap database implementation
+const repo = new PrismaRecipeRepository(db, logger);
+// OR
+const repo = new MongoRecipeRepository(mongoClient, logger);
+```
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Install
-pnpm install
+# Install
+npm install
 
-# 2. Setup env
+# Setup
 cp .env.example .env
-# Edit .env with your database
+npx prisma migrate dev
 
-# 3. Setup database
-pnpm db:push
-
-# 4. Test it works
-pnpm test
-
-# 5. Start dev
-pnpm dev
+# Run
+npm run dev
 ```
 
-## 📁 Structure (SIMPLE)
+## 📝 Usage
 
-```
-src/
-  lib/
-    db.ts           ← Database (ONE Prisma client)
-    logger.ts       ← Logger (simple wrapper)
-    env.ts          ← Environment vars (type-safe)
-    
-  server/api/
-    trpc.ts         ← tRPC setup
-    root.ts         ← Router registry
-    routers/
-      example.ts    ← WORKING example (copy this!)
-      
-  app/              ← Next.js App Router
-```
+### New Project (RecipeDB)
 
-## ✅ What's Working
+1. **Copy template**
+2. **Define domain:**
+   ```typescript
+   // core/domain/recipe.entity.ts
+   export interface Recipe { ... }
+   ```
+3. **Implement service:**
+   ```typescript
+   // core/services/recipe.service.ts
+   export class RecipeService { ... }
+   ```
+4. **Create adapter:**
+   ```typescript
+   // infrastructure/db/prisma-recipe.adapter.ts
+   export class PrismaRecipeRepository implements IRepository<Recipe> { ... }
+   ```
+5. **Wire API:**
+   ```typescript
+   // infrastructure/api/trpc.adapter.ts
+   export const recipeRouter = router({ ... });
+   ```
+6. **Frontend already works** - pagination, search, forms ready!
 
-**Full CRUD example in `src/server/api/routers/example.ts`:**
-- ✅ Create, Read, Update, Delete
-- ✅ Error handling (tRPC errors)
-- ✅ Logging (logger.info, logger.error)
-- ✅ Database (Prisma)
-- ✅ Validation (Zod)
-- ✅ Tests (working end-to-end)
+### Change Database (Prisma → MongoDB)
 
-**Test it:**
-```bash
-# Ping test (tests DB, logger, everything)
-curl http://localhost:3000/api/trpc/example.ping
+1. Create `mongo-recipe.adapter.ts`
+2. Implement `IRepository<Recipe>`
+3. Update composition root
+4. **Done** - frontend unchanged
 
-# Or run tests
-pnpm test
-```
+## 🛠️ Tech Stack
 
-## 🎯 How to Add New Routes
+### Frontend (FIXED)
+- **Framework:** Next.js 15 + React 19
+- **State:** Zustand (global), React Hook Form (forms), nuqs (URL)
+- **Styling:** Tailwind CSS
+- **Auth:** NextAuth v5 (UI ready)
 
-**Copy the pattern in `example.ts`:**
+### Backend (SWAPPABLE)
+- **API:** tRPC (can swap to REST)
+- **DB:** Prisma + Postgres (can swap to Mongo, Supabase)
+- **Validation:** Zod
+- **Testing:** Vitest + Testing Library + Playwright
 
-1. Create router file:
-```typescript
-// src/server/api/routers/user.ts
-import { z } from 'zod';
-import { router, publicProcedure, TRPCError } from '../trpc';
+### Tooling
+- Biome (lint + format)
+- TypeScript strict mode (30+ flags)
+- Husky (pre-commit hooks)
+- Custom validators (block bad code)
 
-export const userRouter = router({
-  create: publicProcedure
-    .input(z.object({ name: z.string(), email: z.string().email() }))
-    .mutation(async ({ input, ctx }) => {
-      ctx.logger.info('Creating user', { email: input.email });
-      
-      try {
-        return await ctx.db.user.create({ data: input });
-      } catch (error) {
-        ctx.logger.error('Failed to create user', { error });
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-      }
-    }),
-  // ... getById, list, update, delete (copy from example.ts)
-});
-```
-
-2. Add to root router:
-```typescript
-// src/server/api/root.ts
-import { userRouter } from './routers/user';
-
-export const appRouter = router({
-  example: exampleRouter,
-  user: userRouter, // ← Add here
-});
-```
-
-3. Update Prisma schema:
-```prisma
-// prisma/schema.prisma
-model User {
-  id    String @id @default(cuid())
-  name  String
-  email String @unique
-}
-```
-
-4. Push schema:
-```bash
-pnpm db:push
-```
-
-**Done!** Your route follows the EXACT same pattern.
-
-## 🛡️ What's Enforced
-
-Validators prevent AI from creating mess:
-
-❌ Can't create new `PrismaClient()` → Must use `@/lib/db`
-❌ Can't import winston/pino → Must use `@/lib/logger`
-❌ Can't use `console.log` → Must use `logger.*`
-❌ Can't create custom error classes → Must use `TRPCError`
-
-**Result:** Consistent code. Always.
-
-## 📝 Adding Features
-
-### New Error Type
-Just use tRPC error codes:
-```typescript
-throw new TRPCError({ 
-  code: 'BAD_REQUEST', 
-  message: 'Your custom message' 
-});
-```
-
-### New Log Location
-Just use the logger:
-```typescript
-import { logger } from '@/lib/logger';
-
-logger.info('Something happened', { data });
-logger.error('Something failed', { error });
-```
-
-### New Env Var
-Add to `src/lib/env.ts`:
-```typescript
-const envSchema = z.object({
-  // ... existing
-  MY_NEW_VAR: z.string(),
-});
-```
-
-Then use: `env.MY_NEW_VAR`
-
-## 🧪 Tests
-
-Every route has tests. Copy the pattern:
-
-```typescript
-// src/server/api/routers/user.test.ts
-import { describe, it, expect } from 'vitest';
-import { appRouter } from '../root';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
-
-const caller = appRouter.createCaller({ db, logger, headers: new Headers() });
-
-describe('User Router', () => {
-  it('should create user', async () => {
-    const user = await caller.user.create({
-      name: 'Test',
-      email: 'test@example.com',
-    });
-    
-    expect(user.id).toBeDefined();
-  });
-});
-```
-
-## 🎯 Philosophy
-
-**SIMPLE:**
-- Use framework features (tRPC errors, Zod validation)
-- Don't reinvent the wheel
-- ONE lib/ folder with basics
-- Copy `example.ts` for new routes
-
-**ENFORCED:**
-- Validators prevent deviating
-- AI must follow patterns
-- Consistent codebase
-
-**WORKING:**
-- Full end-to-end example
-- Tests included
-- Ready to extend
-
-## 🔧 Commands
+## 📋 Commands
 
 ```bash
-pnpm dev              # Start dev server
-pnpm build            # Build for production
-pnpm test             # Run tests
-pnpm db:push          # Push schema changes
-pnpm db:studio        # Open Prisma Studio
-pnpm lint             # Lint code
-pnpm typecheck        # Type check
+# Development
+npm run dev              # Next.js dev server
+npm run build            # Production build
+
+# Quality
+npm run lint             # Biome check
+npm run typecheck        # TypeScript
+npm run test             # Run tests
+npm run validate         # All checks
+
+# Database
+npm run db:migrate       # Run migrations
+npm run db:studio        # Prisma Studio
 ```
 
-**That's it. Simple. Working. Ready to use.** ✅
+## 🧪 Testing
+
+### Unit Tests (No Infrastructure)
+```typescript
+const mockRepo: IRepository = { findById: vi.fn() };
+const service = new RecipeService({ repository: mockRepo });
+```
+
+### Integration Tests (In-Memory)
+```typescript
+const repo = new InMemoryRecipeRepository(logger);
+const service = new RecipeService({ repository: repo });
+```
+
+### E2E Tests (Real DB)
+```typescript
+const repo = new PrismaRecipeRepository(db, logger);
+const service = new RecipeService({ repository: repo });
+```
+
+## ✅ Enforcement
+
+### TypeScript Blocks
+```typescript
+import { PrismaClient } from '@prisma/client'; // ❌ Blocked
+import axios from 'axios';                      // ❌ Blocked
+
+import type { IRepository } from '@/core/ports'; // ✅ Correct
+```
+
+### Pre-Commit Validators
+```
+❌ DO NOT create new PrismaClient() in core/
+❌ DO NOT import Prisma in core/
+❌ DO NOT use console.log in services
+✅ Use port interfaces only
+```
+
+## 📚 Documentation
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Full architecture guide
+- **[docs/SWAP_EXAMPLES.md](./docs/SWAP_EXAMPLES.md)** - How to swap frameworks
+
+## 🎯 Examples
+
+**Pagination:**
+```tsx
+<Pagination total={recipes.total} />
+// Automatically syncs to URL: ?page=2&limit=25
+```
+
+**Search:**
+```tsx
+<SearchFilter onSearch={(q) => refetch({ search: q })} />
+// Debounced, URL-synced: ?search=chocolate
+```
+
+**Sorting:**
+```tsx
+const [{ sortBy, sortOrder }] = useSortUrl(['name', 'date']);
+// URL: ?sortBy=name&sortOrder=asc
+```
+
+## 💡 Why This Template
+
+### ✅ DO Once, Use Forever
+- Pagination setup ✅
+- Search setup ✅
+- State management ✅
+- Forms setup ✅
+- Auth UI ✅
+
+### 🔄 Easy to Change
+- Domain logic (Recipe → Product)
+- Database (Postgres → Mongo)
+- Business rules
+
+### 🚫 Hard to Break
+- Validators block bad code
+- Types prevent errors
+- Tests catch regressions
+
+## 📄 License
+
+MIT
+
+---
+
+**Copy this template. Define your domain. Ship your app.**
