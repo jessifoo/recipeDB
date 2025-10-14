@@ -19,6 +19,22 @@
       "description": "Comma-separated fields with types (e.g., 'title:string,price:number,active:boolean')",
       "x-prompt": "What fields does this entity have? (format: name:type,name:type)"
     },
+    "adapter": {
+      "type": "string",
+      "description": "Database adapter to generate (prisma, mongo, inmemory, all)",
+      "enum": ["prisma", "mongo", "inmemory", "all"],
+      "default": "prisma",
+      "x-prompt": {
+        "message": "Which database adapter?",
+        "type": "list",
+        "items": [
+          { "value": "prisma", "label": "Prisma (PostgreSQL)" },
+          { "value": "mongo", "label": "MongoDB" },
+          { "value": "inmemory", "label": "In-Memory (testing)" },
+          { "value": "all", "label": "All adapters" }
+        ]
+      }
+    },
     "skipTests": {
       "type": "boolean",
       "description": "Skip generating test files",

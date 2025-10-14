@@ -20,6 +20,7 @@ import * as path from 'path';
 interface FeatureGeneratorSchema {
   name: string;
   fields: string;
+  adapter?: 'prisma' | 'mongo' | 'inmemory' | 'all';
   skipTests?: boolean;
 }
 
@@ -91,7 +92,7 @@ function generatePrismaModel(entityName: string, fields: Field[]): string {
 }
 
 export default async function featureGenerator(tree: Tree, schema: FeatureGeneratorSchema) {
-  const { name, fields: fieldsString, skipTests } = schema;
+  const { name, fields: fieldsString, adapter = 'prisma', skipTests } = schema;
   
   // Parse fields
   const fields = parseFields(fieldsString);
@@ -109,14 +110,43 @@ export default async function featureGenerator(tree: Tree, schema: FeatureGenera
     fields,
     fieldsJson: JSON.stringify(fields, null, 2),
     hasArrayFields: fields.some((f) => f.isArray),
+    adapter,
     tmpl: '', // Remove __tmpl__ from file names
   };
 
-  // Generate files from templates
-  const templatePath = path.join(__dirname, 'files');
-  const targetPath = 'src';
-  
-  generateFiles(tree, templatePath, targetPath, substitutions);
+  // Generate core files (always)
+  const coreFiles = ['core/domain', 'core/services', 'core/ports'];
+  coreFiles.forEach(dir => {
+    const templatePath = path.join(__dirname, 'files', dir);
+    const targetPath = `src/${dir}`;
+    if (tree.exists(path.join(__dirname, 'files', dir))) {
+      generateFiles(tree, templatePath, targetPath, substitutions);
+    }
+  });
+
+  // Generate selected adapters
+  const adaptersToGenerate = adapter === 'all' 
+    ? ['prisma', 'mongo', 'inmemory'] 
+    : [adapter];
+
+  adaptersToGenerate.forEach(adapterType => {
+    const adapterFile = `infrastructure/db/${adapterType}-__fileName__.adapter.ts__tmpl__`;
+    const templatePath = path.join(__dirname, 'files', 'infrastructure/db');
+    const targetPath = 'src/infrastructure/db';
+    
+    // Generate specific adapter
+    const adapterTemplate = path.join(__dirname, 'files', adapterFile);
+    if (tree.exists(adapterTemplate)) {
+      generateFiles(tree, templatePath, targetPath, { 
+        ...substitutions, 
+        currentAdapter: adapterType 
+      });
+    }
+  });
+
+  // Generate API router
+  const apiPath = path.join(__dirname, 'files', 'infrastructure/api');
+  generateFiles(tree, apiPath, 'src/infrastructure/api', substitutions);
 
   // Update Prisma schema
   const prismaSchemaPath = 'prisma/schema.prisma';
@@ -137,19 +167,24 @@ export default async function featureGenerator(tree: Tree, schema: FeatureGenera
   await formatFiles(tree);
 
   // Print success message
+  const adaptersList = adapter === 'all' 
+    ? 'prisma, mongo, inmemory'
+    : adapter;
+
   console.log(`
 ✨ Feature "${name}" generated successfully!
 
 Created:
   ✅ core/domain/${fileName}.entity.ts
+  ✅ core/ports/${fileName}.repository.port.ts (database interface)
   ✅ core/services/${fileName}.service.ts
-  ✅ infrastructure/db/prisma-${fileName}.adapter.ts
+  ✅ infrastructure/db/${adaptersList}-${fileName}.adapter.ts
   ✅ infrastructure/api/${fileName}.router.ts
   ${!skipTests ? `✅ Tests for all layers` : ''}
-  ✅ Updated Prisma schema
+  ${adapter === 'prisma' || adapter === 'all' ? `✅ Updated Prisma schema` : ''}
 
 Next steps:
-  1. Run: npx prisma migrate dev --name add-${fileName}
+  ${adapter === 'prisma' || adapter === 'all' ? `1. Run: npx prisma migrate dev --name add-${fileName}` : ''}
   2. Add router to src/server/api/root.ts:
      import { ${propertyName}Router } from '@/infrastructure/api/${fileName}.router';
      export const appRouter = router({
@@ -157,6 +192,11 @@ Next steps:
      });
   3. Implement business logic in ${className}Service
   4. Run tests: npm test ${fileName}
+
+💡 Swap databases easily:
+   In ${fileName}.router.ts, just change the import:
+   - import { Prisma${className}Repository } from '../db/prisma-${fileName}.adapter';
+   + import { Mongo${className}Repository } from '../db/mongo-${fileName}.adapter';
 `);
 
   return () => {

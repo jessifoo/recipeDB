@@ -9,7 +9,16 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure } from '@/server/api/trpc';
 import { <%= className %>Service } from '@/core/services/<%= fileName %>.service';
+import type { 
+  Create<%= className %>DTO,
+  Update<%= className %>DTO 
+} from '@/core/ports/<%= fileName %>.repository.port';
+
+// Choose your adapter (swap easily)
 import { Prisma<%= className %>Repository } from '../db/prisma-<%= fileName %>.adapter';
+// import { Mongo<%= className %>Repository } from '../db/mongo-<%= fileName %>.adapter';
+// import { InMemory<%= className %>Repository } from '../db/inmemory-<%= fileName %>.adapter';
+
 import { ConsoleLogger } from '../logger/console.adapter';
 import { InMemoryCache } from '../cache/in-memory.adapter';
 import { InMemoryEventBus } from '../events/in-memory.adapter';

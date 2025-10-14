@@ -7,37 +7,23 @@
 
 import type { <%= className %> } from '../domain/<%= fileName %>.entity';
 import { <%= className %>Rules } from '../domain/<%= fileName %>.entity';
-import type { IRepository } from '../ports/repository.port';
+import type { 
+  I<%= className %>Repository,
+  Create<%= className %>DTO,
+  Update<%= className %>DTO,
+  <%= className %>Filter
+} from '../ports/<%= fileName %>.repository.port';
 import type { ILogger } from '../ports/logger.port';
 import type { ICache } from '../ports/cache.port';
 import type { IEventBus } from '../ports/event-bus.port';
 import { CacheKeyBuilder } from '../ports/cache.port';
 
 /**
- * DTOs - Data Transfer Objects
- */
-export interface Create<%= className %>DTO {
-  <% fields.forEach(function(field) { %>
-  <%= field.name %><% if (field.isOptional) { %>?<% } %>: <%= field.type %><% if (field.isArray) { %>[]<% } %>;
-  <% }); %>
-}
-
-export interface Update<%= className %>DTO {
-  <% fields.forEach(function(field) { %>
-  <%= field.name %>?: <%= field.type %><% if (field.isArray) { %>[]<% } %>;
-  <% }); %>
-}
-
-export interface <%= className %>Filter {
-  search?: string;
-  // Add filter fields as needed
-}
-
-/**
  * Service dependencies - Injected via constructor
+ * Repository can be Prisma, Mongo, DynamoDB, In-Memory, etc.
  */
 export interface <%= className %>ServiceDeps {
-  repository: IRepository<<%= className %>, Create<%= className %>DTO, Update<%= className %>DTO>;
+  repository: I<%= className %>Repository;
   logger: ILogger;
   cache?: ICache;
   eventBus?: IEventBus;
