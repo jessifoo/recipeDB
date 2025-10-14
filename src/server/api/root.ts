@@ -1,13 +1,12 @@
 /**
- * Root router - Add all routers here
+ * Root router - Aggregate all routers
  */
 
 import { router } from './trpc';
-import { exampleRouter } from './routers/example';
+import { exampleRouter } from '@/infrastructure/api/trpc.adapter';
 
 export const appRouter = router({
   example: exampleRouter,
-  // Add more routers here
 });
 
 export type AppRouter = typeof appRouter;

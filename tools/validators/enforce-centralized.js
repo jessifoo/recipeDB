@@ -23,20 +23,31 @@ const RULES = [
   {
     pattern: /new PrismaClient\(/,
     message: 'DO NOT create new PrismaClient() - use: import { db } from "@/lib/db"',
+    exclude: ['src/lib/db.ts'],
   },
   {
     pattern: /import.*winston|import.*pino|import.*bunyan/,
-    message: 'DO NOT import logging libraries - use: import { logger } from "@/lib/logger"',
+    message: 'DO NOT import logging libraries - use port: import type { ILogger } from "@/core/ports/logger.port"',
   },
   {
     pattern: /console\.(log|info|warn|error|debug)/,
-    message: 'DO NOT use console.* - use: import { logger } from "@/lib/logger"',
-    exclude: ['src/lib/logger.ts', '*.test.ts'],
+    message: 'DO NOT use console.* in business logic - use ILogger port',
+    exclude: ['src/infrastructure/logger/', '*.test.ts', 'tools/'],
   },
   {
     pattern: /class.*Error extends Error/,
-    message: 'DO NOT create custom error classes - use: import { TRPCError } from "@/server/api/trpc"',
-    exclude: ['src/lib/'],
+    message: 'DO NOT create custom error classes outside core - use domain errors in @/core/ports/',
+    exclude: ['src/lib/errors.ts', 'src/core/'],
+  },
+  {
+    pattern: /import.*@prisma\/client/,
+    message: 'DO NOT import Prisma in core/ - implement IRepository adapter in infrastructure/',
+    exclude: ['src/infrastructure/db/', 'src/lib/db.ts', 'prisma/'],
+  },
+  {
+    pattern: /import.*@trpc\/server/,
+    message: 'DO NOT import tRPC in core/ - use adapters in infrastructure/api/',
+    exclude: ['src/infrastructure/api/', 'src/server/api/'],
   },
 ];
 
