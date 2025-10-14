@@ -12,5 +12,5 @@ import { createFileMetadata } from '@app/tools/file-marker/marker';
 
 export const __metadata = createFileMetadata('@app/core:setup');
 
-export { logger, Logger } from './logger';
+export { ConsoleLogger, createLogger } from './logger';
 export type { ILogger, LogContext } from './interface';
