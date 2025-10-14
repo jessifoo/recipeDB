@@ -41,13 +41,13 @@
     // Only approved paths work, everything else is blocked
     "paths": {
       // Approved paths
-      "@app/types": ["packages/types/src"],
-      "@app/logger": ["packages/logger/src"],
-      "@app/database": ["packages/database/src"],
-      "@app/errors": ["packages/errors/src"],
-      "@app/validation": ["packages/validation/src"],
-      "@app/config": ["packages/config/src"],
-      "@app/core": ["packages/core/src"],
+      "@app/types": ["packages/types"],
+      "@app/logger": ["packages/logger"],
+      "@app/database": ["packages/database"],
+      "@app/errors": ["packages/errors"],
+      "@app/validation": ["packages/validation"],
+      "@app/config": ["packages/config"],
+      "@app/core": ["packages/core"],
       "@app/tools/*": ["tools/*"],
       
       // BLOCKED PATHS - AI cannot import these
