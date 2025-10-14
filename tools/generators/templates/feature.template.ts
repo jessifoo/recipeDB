@@ -57,7 +57,7 @@ function generateService(
 
 import { createFileMetadata } from '@app/tools/file-marker/marker';
 import type { ILogger } from '@app/logger';
-import { NotFoundError, DatabaseError } from '@app/errors';
+import { createError } from '@app/errors';
 import type { ${capitalized}, ${capitalized}Id, Validated } from '@app/types';
 import type { ${capitalized}Repository } from './${name}.repository';
 import type { Create${capitalized}Input, Update${capitalized}Input } from '@app/validation';
@@ -80,7 +80,7 @@ ${hasCreate ? `
       return ${name};
     } catch (error) {
       this.logger.error('Failed to create ${name}', error);
-      throw new DatabaseError('Failed to create ${name}', { cause: error });
+      throw createError.database('Failed to create ${name}', error);
     }
   }
 ` : ''}
@@ -89,7 +89,7 @@ ${hasGet ? `
     const ${name} = await this.repository.findById(id);
 
     if (!${name}) {
-      throw new NotFoundError('${capitalized}', id);
+      throw createError.notFound('${capitalized}', id);
     }
 
     return ${name};
@@ -101,7 +101,7 @@ ${hasList ? `
       return await this.repository.findMany(filters);
     } catch (error) {
       this.logger.error('Failed to list ${name}s', error);
-      throw new DatabaseError('Failed to list ${name}s', { cause: error });
+      throw createError.database('Failed to list ${name}s', error);
     }
   }
 ` : ''}
@@ -121,7 +121,7 @@ ${hasUpdate ? `
       return updated;
     } catch (error) {
       this.logger.error('Failed to update ${name}', error);
-      throw new DatabaseError('Failed to update ${name}', { cause: error });
+      throw createError.database('Failed to update ${name}', error);
     }
   }
 ` : ''}
@@ -137,7 +137,7 @@ ${hasDelete ? `
       this.logger.info('${capitalized} deleted', { id });
     } catch (error) {
       this.logger.error('Failed to delete ${name}', error);
-      throw new DatabaseError('Failed to delete ${name}', { cause: error });
+      throw createError.database('Failed to delete ${name}', error);
     }
   }
 ` : ''}
@@ -343,7 +343,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ${capitalized}Service } from './${name}.service';
 import type { ${capitalized}Repository } from './${name}.repository';
 import type { ILogger } from '@app/logger';
-import { NotFoundError, DatabaseError } from '@app/errors';
+import { AppError } from '@app/errors';
 
 describe('${capitalized}Service', () => {
   let service: ${capitalized}Service;
@@ -384,11 +384,11 @@ ${operations.includes('create') ? `
       expect(mockLogger.info).toHaveBeenCalledWith('Creating ${name}', expect.any(Object));
     });
 
-    it('should throw DatabaseError on repository failure', async () => {
+    it('should throw AppError on repository failure', async () => {
       const input = { /* mock data */ };
       vi.mocked(mockRepository.create).mockRejectedValue(new Error('DB error'));
 
-      await expect(service.create(input as any)).rejects.toThrow(DatabaseError);
+      await expect(service.create(input as any)).rejects.toThrow(AppError);
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -404,10 +404,10 @@ ${operations.includes('get') ? `
       expect(result).toEqual(expected);
     });
 
-    it('should throw NotFoundError when not found', async () => {
+    it('should throw AppError when not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(null);
 
-      await expect(service.getById('1' as any)).rejects.toThrow(NotFoundError);
+      await expect(service.getById('1' as any)).rejects.toThrow(AppError);
     });
   });
 ` : ''}
