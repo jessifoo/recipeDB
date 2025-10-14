@@ -19,7 +19,7 @@
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
     "db:studio": "npx prisma studio",
-    "generate:feature": "tsx tools/generators/generate-feature.ts"
+    "generate:feature": "nx g feature"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
