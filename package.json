@@ -18,7 +18,8 @@
     "prepare": "husky install",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "generate:feature": "tsx tools/generators/generate-feature.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.5.0",
@@ -42,7 +43,8 @@
     "@vitest/coverage-v8": "^1.0.0",
     "glob": "^10.0.0",
     "minimatch": "^9.0.0",
-    "type-coverage": "^2.27.0"
+    "type-coverage": "^2.27.0",
+    "tsx": "^4.0.0"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
