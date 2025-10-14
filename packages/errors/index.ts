@@ -14,6 +14,4 @@ export { ValidationError } from './validation-error';
 export { DatabaseError } from './database-error';
 export { NotFoundError } from './not-found-error';
 export { AuthenticationError, AuthorizationError } from './auth-error';
-export { handleError, catchAsync, handleTrpcError } from './error-handler';
 export { ErrorBoundary } from './error-boundary';
-export type { ErrorHandlerResult } from './error-handler';
