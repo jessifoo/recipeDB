@@ -1,0 +1,10 @@
+{
+  "atLeast": 95,
+  "strict": true,
+  "ignoreFiles": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tools/**",
+    "**/*.d.ts"
+  ]
+}

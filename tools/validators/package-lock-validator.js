@@ -36,10 +36,12 @@ const BANNED_DEPENDENCIES = {
   joi: 'Use @app/validation (Zod schemas)',
   'class-validator': 'Use @app/validation (Zod schemas)',
 
-  // State management (Redux Toolkit is approved)
-  mobx: 'Use Redux Toolkit',
-  recoil: 'Use Redux Toolkit or Zustand',
-  jotai: 'Use Redux Toolkit or Zustand',
+  // State management (Zustand is approved)
+  '@reduxjs/toolkit': 'Use Zustand for client state',
+  'react-redux': 'Use Zustand for client state',
+  mobx: 'Use Zustand for client state',
+  recoil: 'Use Zustand for client state',
+  jotai: 'Use Zustand for client state',
 
   // Linting/Formatting (use Biome)
   eslint: 'Use Biome instead',
@@ -96,10 +98,12 @@ const APPROVED_DEPENDENCIES = {
 
   // Testing
   vitest: true,
+  '@vitest/coverage-v8': true,
   '@testing-library/react': true,
   '@testing-library/jest-dom': true,
   '@playwright/test': true,
   msw: true,
+  'type-coverage': true,
 
   // Build tools
   '@nx/next': true,

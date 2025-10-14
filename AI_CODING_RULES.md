@@ -163,13 +163,21 @@ Every commit runs 7 validators:
 
 | What | Enforced By | Severity |
 |------|-------------|----------|
-| One package.json | File structure | CRITICAL |
-| Banned packages | Pre-commit validator | CRITICAL |
-| File markers | Pre-commit validator | ERROR |
-| Centralized logger | TypeScript paths + ESLint | ERROR |
-| Centralized db | TypeScript paths + ESLint | ERROR |
+| One package.json | Pre-commit validator #0 | CRITICAL |
+| No TODOs/FIXMEs | Pre-commit validator #1 | ERROR |
+| No explicit 'any' | Pre-commit validator #2 | ERROR |
+| File markers | Pre-commit validator #3 | ERROR |
+| No duplicates | Pre-commit validator #4 | ERROR |
+| Banned packages | Pre-commit validator #5 | ERROR |
+| Directory structure | Pre-commit validator #6 | ERROR |
+| No banned imports | Pre-commit validator #7 | ERROR |
+| Function complexity | Pre-commit validator #8 | WARNING |
+| Test coverage | Pre-commit validator #9 | WARNING |
+| No console.log | Biome + validator #1 | ERROR |
 | Branded types | TypeScript compiler | ERROR |
-| No console.log | Biome | ERROR |
+| Return types required | Code quality validator | ERROR |
+| No empty catch blocks | Code quality validator | ERROR |
+| No .only/.skip in tests | Code quality validator | ERROR |
 
 ## Questions?
 

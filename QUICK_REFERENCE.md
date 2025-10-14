@@ -60,18 +60,22 @@ function getUser(id: UserId): Promise<User>
 
 ---
 
-## 🛡️ Enforcement Layers
+## 🛡️ Enforcement Layers (12 Validators)
 
 ```
-0. No package.json in packages/    (validator)
-1. File markers required           (validator)
-2. No duplicates                   (validator)
-3. Package lockdown                (validator)
-4. Directory structure             (validator)
-5. Import validation               (validator)
-6. Biome check                     (linting)
-7. TypeScript compilation          (types)
-8. Tests must pass                 (quality)
+ 0. No package.json in packages/   (CRITICAL)
+ 1. Code quality                   (no TODOs, empty catch, .only)
+ 2. Type coverage                  (no explicit 'any')
+ 3. File markers                   (generator enforcement)
+ 4. No duplicates                  (AST analysis)
+ 5. Package lockdown               (dependency control)
+ 6. Directory structure            (file location)
+ 7. Import validation              (banned imports)
+ 8. Function complexity            (warning only)
+ 9. Test coverage                  (warning only)
+10. Biome check                    (lint + format)
+11. TypeScript compilation         (type safety)
+12. Tests must pass                (correctness)
 ```
 
 **All run on:** `git commit`

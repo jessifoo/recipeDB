@@ -25,15 +25,19 @@ import { db } from '@app/database';              // ✅ Only way
 import { logger } from '@app/logger';            // ✅ Only way
 ```
 
-**8 Pre-commit validators:**
-1. No package.json in packages/
-2. File markers required
-3. No duplicates
-4. Package validation
-5. Directory structure
-6. Import validation
-7. Biome check
-8. TypeScript + tests
+**12 Pre-commit validators:**
+1. No package.json in packages/ (CRITICAL)
+2. Code quality (no TODOs, .only, empty catch)
+3. Type coverage (no explicit 'any')
+4. File markers required
+5. No duplicates
+6. Package validation
+7. Directory structure
+8. Import validation
+9. Function complexity (warning)
+10. Test coverage (warning)
+11. Biome check
+12. TypeScript + tests
 
 ## 📦 Core Packages
 
@@ -66,11 +70,21 @@ pnpm db:migrate       # DB migration
 - `QUICK_REFERENCE.md` - Quick lookup
 - Each package has its own README
 
+## 🎯 State Management Strategy
+
+```typescript
+// Server state (DB, API) → tRPC + TanStack Query
+// URL state (filters, pagination) → nuqs (type-safe searchParams)
+// Form state (validation) → React Hook Form + Zod
+// Client state (UI, modals) → Zustand
+```
+
 ## 🎯 Next: Phase 3
 
 - [ ] Auth (NextAuth)
-- [ ] State management
+- [ ] Zustand store setup
 - [ ] tRPC
+- [ ] React Hook Form patterns
 - [ ] Generators
 - [ ] UI components
 
