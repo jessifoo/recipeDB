@@ -1,5 +1,5 @@
 /**
- * Root router - Aggregate all routers
+ * Root tRPC router - Aggregate all feature routers
  */
 
 import { router } from './trpc';
