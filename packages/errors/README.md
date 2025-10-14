@@ -1,15 +1,51 @@
 # @app/errors
 
-**ONE place for error handling logic, used at appropriate boundaries.**
+**ONE file. ONE error class. ONE place for messages.**
 
-## ✅ The Solution: Error Utilities
+## 📁 Structure
 
-**You have ONE file with ALL error handling logic:**
-- `packages/errors/error-utils.ts`
+```
+packages/errors/
+  ├── errors.ts      ← EVERYTHING here
+  └── index.ts       ← Just exports
+```
 
-**Each layer imports and uses the appropriate utility:**
+That's it. Two files total.
 
-### API Layer (tRPC)
+---
+
+## ✅ Usage
+
+### Throw Errors (Service Layer)
+
+```typescript
+import { createError } from '@app/errors';
+
+// Validation error
+if (!email) {
+  throw createError.validation('Email is required', { field: 'email' });
+}
+
+// Not found
+const user = await db.user.findById(id);
+if (!user) {
+  throw createError.notFound('User', id);
+}
+
+// Database error
+try {
+  await db.user.create(data);
+} catch (err) {
+  throw createError.database('Failed to create user', err);
+}
+
+// Auth errors
+throw createError.unauthenticated();
+throw createError.forbidden('Admin access required');
+```
+
+### Convert Errors (API Layer)
+
 ```typescript
 import { toTrpcError } from '@app/errors';
 
@@ -19,38 +55,21 @@ export const userRouter = router({
       try {
         return await ctx.userService.create(input);
       } catch (error) {
-        // ONE utility, ONE place, ALL logic
-        throw new TRPCError(toTrpcError(error));
+        throw new TRPCError(toTrpcError(error)); // ONE utility
       }
     }),
 });
 ```
 
-### API Layer (REST)
-```typescript
-import { toHttpError } from '@app/errors';
+### Display Errors (UI Layer)
 
-app.post('/users', async (req, res) => {
-  try {
-    const user = await userService.create(req.body);
-    res.json(user);
-  } catch (error) {
-    // ONE utility, ONE place, ALL logic
-    const httpError = toHttpError(error);
-    res.status(httpError.status).json(httpError.body);
-  }
-});
-```
-
-### UI Layer
 ```typescript
 import { toUserMessage } from '@app/errors';
 
 function UserProfile() {
   const { error } = trpc.user.getById.useQuery(id);
-
+  
   if (error) {
-    // ONE utility, ONE place, ALL logic
     return <ErrorMessage>{toUserMessage(error)}</ErrorMessage>;
   }
 }
@@ -58,157 +77,127 @@ function UserProfile() {
 
 ---
 
-## 🎯 The Key Insight
+## 📊 What's in `errors.ts`
 
-**You DON'T have:**
-- ❌ One handler function called everywhere
-- ❌ God object that does everything
-- ❌ Tight coupling
-
-**You DO have:**
-- ✅ One file with error conversion logic (`error-utils.ts`)
-- ✅ Utilities used at appropriate boundaries
-- ✅ Each layer handles its own concerns
-- ✅ Clean separation of responsibilities
-
----
-
-## 📦 Available Utilities
-
-### `toTrpcError(error: unknown)`
-Converts domain errors to tRPC errors.
-
+### 1. Error Codes (ONE object)
 ```typescript
-import { toTrpcError } from '@app/errors';
+export const ErrorCode = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  NOT_FOUND: 'NOT_FOUND',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  FORBIDDEN: 'FORBIDDEN',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+```
 
-try {
-  await service.doSomething();
-} catch (error) {
-  throw new TRPCError(toTrpcError(error));
+### 2. Error Messages (ONE object)
+```typescript
+export const ErrorMessage = {
+  VALIDATION_ERROR: 'Validation failed',
+  NOT_FOUND: 'Resource not found',
+  // ... all messages
+} as const;
+```
+
+### 3. ONE Error Class
+```typescript
+export class AppError extends Error {
+  constructor(
+    public readonly code: ErrorCode,
+    message?: string,
+    public readonly statusCode: number = 500,
+    public readonly context?: Record<string, unknown>
+  ) { ... }
 }
 ```
 
-### `toHttpError(error: unknown)`
-Converts domain errors to HTTP responses.
-
+### 4. Factory Functions
 ```typescript
-import { toHttpError } from '@app/errors';
-
-try {
-  await service.doSomething();
-} catch (error) {
-  const { status, body } = toHttpError(error);
-  res.status(status).json(body);
-}
+export const createError = {
+  validation: (msg?, ctx?) => new AppError(...),
+  notFound: (resource, id?) => new AppError(...),
+  // ... etc
+};
 ```
 
-### `toUserMessage(error: unknown)`
-Converts errors to user-friendly messages.
-
+### 5. Conversion Utilities
 ```typescript
-import { toUserMessage } from '@app/errors';
-
-if (error) {
-  toast.error(toUserMessage(error));
-}
-```
-
-### `shouldLog(error: unknown)`
-Determines if error should be logged.
-
-```typescript
-import { shouldLog } from '@app/errors';
-
-if (shouldLog(error)) {
-  logger.error('Unexpected error', error);
-}
-```
-
-### `shouldReport(error: unknown)`
-Determines if error should be reported to monitoring.
-
-```typescript
-import { shouldReport } from '@app/errors';
-
-if (shouldReport(error)) {
-  Sentry.captureException(error);
-}
+export function toTrpcError(error) { ... }
+export function toHttpError(error) { ... }
+export function toUserMessage(error) { ... }
 ```
 
 ---
 
-## 🏗️ Architecture
+## 🎯 Adding New Error
 
-```
-error-utils.ts (ONE file with ALL logic)
-       ↓
-   ┌───┴────┬─────────┬──────────┐
-   ↓        ↓         ↓          ↓
-tRPC    REST API    UI Layer  Monitoring
-layer    layer       layer      layer
+**ONE place to update:**
 
-Each layer uses the appropriate utility
-```
-
-**Benefits:**
-- ✅ ONE place to maintain error handling logic
-- ✅ Consistent error handling everywhere
-- ✅ Each layer handles at its boundary
-- ✅ Easy to test (utilities are pure functions)
-- ✅ Easy to extend (add new error type, update utilities)
-
----
-
-## 💡 Adding New Error Types
-
-1. Create error class:
 ```typescript
-// packages/errors/rate-limit-error.ts
-export class RateLimitError extends BaseError {
-  constructor(limit: number) {
-    super('Rate limit exceeded', 'RATE_LIMIT', 429, true, { limit });
-  }
-}
-```
+// packages/errors/errors.ts
 
-2. Update utilities (ONE place):
-```typescript
-// packages/errors/error-utils.ts
+// 1. Add code
+export const ErrorCode = {
+  // ... existing
+  RATE_LIMIT: 'RATE_LIMIT', // ← Add here
+} as const;
+
+// 2. Add message
+export const ErrorMessage = {
+  // ... existing
+  RATE_LIMIT: 'Too many requests', // ← Add here
+} as const;
+
+// 3. Add factory (optional)
+export const createError = {
+  // ... existing
+  rateLimit: () => new AppError(ErrorCode.RATE_LIMIT, undefined, 429), // ← Add here
+};
+
+// 4. Update converters if needed
 export function toTrpcError(error: unknown) {
-  // ... existing errors
-  
-  if (error instanceof RateLimitError) {
-    return { code: 'TOO_MANY_REQUESTS', message: error.message };
+  if (error instanceof AppError) {
+    const codeMap = {
+      // ... existing
+      429: 'TOO_MANY_REQUESTS', // ← Add here
+    };
+    // ...
   }
-  
-  // ... rest
-}
-
-export function toHttpError(error: unknown) {
-  // ... existing errors
-  
-  if (error instanceof RateLimitError) {
-    return { status: 429, body: { error: error.code } };
-  }
-  
-  // ... rest
 }
 ```
 
-3. Done! All layers now handle the new error correctly.
+**Done!** Entire codebase now handles the new error.
 
 ---
 
-## 🎯 Summary
+## 📦 File Count
 
-**This IS centralized error handling:**
-- ✅ ONE file with ALL conversion logic
-- ✅ Used at appropriate boundaries
-- ✅ Clean, maintainable, testable
+**Before:** 8 files
+- base.ts
+- validation-error.ts
+- not-found-error.ts
+- database-error.ts
+- auth-error.ts
+- error-utils.ts
+- error-boundary.tsx
+- index.ts
 
-**This is NOT:**
-- ❌ A singleton
-- ❌ A god object
-- ❌ Global state
+**After:** 2 files
+- errors.ts (everything)
+- index.ts (exports)
 
-**The logic is centralized, the usage is decentralized.** That's Clean Code. 🧹
+**73% fewer files.** ✅
+
+---
+
+## 💡 Philosophy
+
+**ONE error class** - `AppError` with code + status
+**ONE place for codes** - `ErrorCode` object
+**ONE place for messages** - `ErrorMessage` object
+**ONE place for logic** - Factory functions + converters
+
+**Everything in ONE file.**
+
+Simple. Clean. Easy to find. 🎯
