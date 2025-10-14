@@ -5,7 +5,7 @@
  * Validation utilities - Returns branded Validated type
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import type { Validated } from '@app/types';
 import { ValidationError } from '@app/errors';
 import { logger } from '@app/logger';

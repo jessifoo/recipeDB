@@ -48,6 +48,7 @@
       "@app/validation": ["packages/validation/src"],
       "@app/config": ["packages/config/src"],
       "@app/core": ["packages/core/src"],
+      "@app/tools/*": ["tools/*"],
       
       // BLOCKED PATHS - AI cannot import these
       "@prisma/client": ["BLOCKED - use @app/database instead"],

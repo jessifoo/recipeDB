@@ -5,7 +5,7 @@
  * Centralized error handler - Single point for all error handling
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { logger } from '@app/logger';
 import { BaseError } from './base';
 

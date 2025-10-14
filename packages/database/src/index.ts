@@ -8,7 +8,7 @@
  * ❌ WRONG: import { PrismaClient } from '@prisma/client'; new PrismaClient()
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 
 export const __metadata = createFileMetadata('@app/core:setup');
 

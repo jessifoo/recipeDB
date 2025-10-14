@@ -5,7 +5,7 @@
  * Logger implementation - SINGLE INSTANCE
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import type { ILogger, LogContext } from './interface';
 import { LogLevel } from '@app/types';
 

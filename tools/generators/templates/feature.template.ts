@@ -55,7 +55,7 @@ function generateService(
  * ${capitalized} Service - Business logic layer
  */
 
-import { createFileMetadata } from '../../../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { logger } from '@app/logger';
 import { handleError, catchAsync, NotFoundError, DatabaseError } from '@app/errors';
 import type { ${capitalized}, ${capitalized}Id, Validated } from '@app/types';
@@ -165,7 +165,7 @@ function generateRepository(
  * ${capitalized} Repository - Data access layer
  */
 
-import { createFileMetadata } from '../../../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { db } from '@app/database';
 import type { ${capitalized}, ${capitalized}Id } from '@app/types';
 
@@ -216,7 +216,7 @@ function generateSchemas(
  * ${capitalized} Validation Schemas
  */
 
-import { createFileMetadata } from '../../../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { z } from 'zod';
 import { common } from './common.schema';
 

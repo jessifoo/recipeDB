@@ -5,7 +5,7 @@
  * Logger interface - All loggers must implement this
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import type { LogLevel } from '@app/types';
 
 export const __metadata = createFileMetadata('@app/core:setup');

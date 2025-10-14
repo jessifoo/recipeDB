@@ -5,7 +5,7 @@
  * Config package - Environment & constants
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 
 export const __metadata = createFileMetadata('@app/core:setup');
 

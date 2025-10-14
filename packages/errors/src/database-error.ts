@@ -5,7 +5,7 @@
  * Database error - DB operation failures
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { BaseError } from './base';
 
 export const __metadata = createFileMetadata('@app/core:setup');

@@ -6,7 +6,7 @@
  * Prevents mixing up primitive types
  */
 
-import { createFileMetadata, FILE_MARKER } from '../../../tools/file-marker/marker';
+import { createFileMetadata, FILE_MARKER } from '@app/tools/file-marker/marker';
 
 export const __metadata = createFileMetadata('@app/core:setup');
 

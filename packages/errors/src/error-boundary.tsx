@@ -5,7 +5,7 @@
  * React Error Boundary - Catches React render errors
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { Component, type ReactNode } from 'react';
 import { logger } from '@app/logger';
 import { handleError } from './error-handler';

@@ -5,7 +5,7 @@
  * Not found error - Resource not found
  */
 
-import { createFileMetadata } from '../../../tools/file-marker/marker';
+import { createFileMetadata } from '@app/tools/file-marker/marker';
 import { BaseError } from './base';
 
 export const __metadata = createFileMetadata('@app/core:setup');
