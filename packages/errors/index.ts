@@ -15,3 +15,4 @@ export { DatabaseError } from './database-error';
 export { NotFoundError } from './not-found-error';
 export { AuthenticationError, AuthorizationError } from './auth-error';
 export { ErrorBoundary } from './error-boundary';
+export { toTrpcError, toHttpError, toUserMessage, shouldLog, shouldReport } from './error-utils';
