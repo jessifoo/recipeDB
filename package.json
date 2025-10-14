@@ -1,6 +1,7 @@
 {
-  "name": "@app/monorepo",
-  "version": "0.0.1",
+  "name": "@app/template",
+  "version": "1.0.0",
+  "description": "AI-proof TypeScript template with maximum enforcement",
   "license": "MIT",
   "private": true,
   "scripts": {

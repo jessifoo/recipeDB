@@ -1,14 +1,28 @@
 # AI-Proof TypeScript Template
 
-**Maximum enforcement foundation - Makes bad code impossible.**
+**Reusable foundation for any project - Maximum enforcement built-in.**
 
-## 🚀 Quick Start
+> 🎯 This is a **TEMPLATE** - Clone it for every new project you start!
 
+## 🚀 Using This Template
+
+### For a New Project:
+```bash
+# Quick way:
+./create-project.sh my-new-project
+
+# Or use as GitHub template:
+# Click "Use this template" on GitHub
+```
+
+### For Template Development:
 ```bash
 pnpm install
 pnpm run prepare
 pnpm run validate
 ```
+
+See `TEMPLATE_USAGE.md` for detailed instructions.
 
 ## 🔒 What's Enforced
 
@@ -66,9 +80,15 @@ pnpm db:migrate       # DB migration
 
 ## 📚 Docs
 
+**For Template Users:**
+- `TEMPLATE_USAGE.md` - How to create projects ← **START HERE**
+- `PROJECTS.md` - Example project ideas
+- `.github/TEMPLATE_CHECKLIST.md` - Setup checklist
+
+**For Development:**
 - `AI_CODING_RULES.md` - Rules for AI
 - `QUICK_REFERENCE.md` - Quick lookup
-- Each package has its own README
+- `QUALITY_ENFORCEMENT.md` - Quality rules
 
 ## 🎯 State Management Strategy
 
